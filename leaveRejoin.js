@@ -94,24 +94,33 @@ function setupLeaveRejoin(bot, createBot) {
             cleanup()
             try {
                 bot.quit()
+                // ✅ ADDED: Schedule reconnect after quitting
+                scheduleReconnect('scheduled-leave')
             } catch (e) {
                 // ignore if already closed
+                scheduleReconnect('quit-error')
             }
         }, stayTime)
     })
 
-    // When the connection ends for ANY reason, just clean up our timers.
-    // Reconnection is handled by index.js — no duplicate reconnect here.
+    // When the connection ends for ANY reason, schedule a reconnect
     bot.on('end', () => {
         cleanup()
+        // ✅ ADDED: Reconnect on unexpected disconnect
+        scheduleReconnect('unexpected-end')
     })
 
     bot.on('kicked', () => {
         cleanup()
+        // ✅ ADDED: Reconnect when kicked
+        scheduleReconnect('kicked')
     })
 
-    bot.on('error', () => {
+    bot.on('error', (error) => {
+        console.log('[AFK] Bot error:', error?.message || error)
         cleanup()
+        // ✅ ADDED: Reconnect on error
+        scheduleReconnect('error')
     })
 }
 
