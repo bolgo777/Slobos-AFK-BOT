@@ -409,9 +409,6 @@ function createBot() {
       // Start all modules
       initializeModules(bot, mcData, defaultMove);
 
-      // Setup enhanced Leave/Rejoin logic
-      setupLeaveRejoin(bot, createBot);
-
       setTimeout(() => {
         if (bot && botState.connected) {
           bot.chat('/gamerule sendCommandFeedback false');
@@ -507,6 +504,11 @@ function scheduleReconnect() {
 }
 
 // ============================================================
+// SETUP LEAVE REJOIN MODULE
+// ============================================================
+const setupLeaveRejoin = require('./leaveRejoin');
+
+// ============================================================
 // MODULE INITIALIZATION
 // ============================================================
 function initializeModules(bot, mcData, defaultMove) {
@@ -557,7 +559,7 @@ function initializeModules(bot, mcData, defaultMove) {
         }, 100);
         botState.lastActivity = Date.now();
       }
-    }, 3000); // Jump every 30 seconds
+    }, 3000); // Jump every 3 seconds
 
     if (config.utils['anti-afk'].sneak) {
       bot.setControlState('sneak', true);
@@ -581,21 +583,12 @@ function initializeModules(bot, mcData, defaultMove) {
   if (config.modules.beds) bedModule(bot, mcData);
   if (config.modules.chat) chatModule(bot);
 
-  // Periodic Rejoin
+  // ---------- PERIODIC REJOIN - NOW USING PROPER MODULE ----------
   if (config.utils['periodic-rejoin'] && config.utils['periodic-rejoin'].enabled) {
-    periodicRejoin(bot);
+    setupLeaveRejoin(bot, createBot);
   }
 
   console.log('[Modules] All modules initialized!');
-}
-
-// Periodic Rejoin Module
-const setupLeaveRejoin = require('./leaveRejoin');
-
-// Periodic Rejoin Module - Handled by leaveRejoin.js now
-function periodicRejoin(bot) {
-  // Deprecated in favor of leaveRejoin.js
-  console.log('[Rejoin] Using new leaveRejoin system.');
 }
 
 // ============================================================
